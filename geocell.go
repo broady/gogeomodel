@@ -1,3 +1,6 @@
+// Copyright 2012 Chris Broadfoot (chris@chrisbroadfoot.id.au). All rights reserved.
+// Licensed under Apache 2.
+// Based on the geomodel project (http://code.google.com/p/geomodel)
 package geocell
 
 import (
