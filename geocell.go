@@ -12,7 +12,7 @@ const (
 	base16    = "0123456789abcdef"
 )
 
-func Encode(lat, lng float64) string {
+func Encode(latlng LatLng) Cell {
 	cell := ""
 	lats := [2]float64{-90, 90}
 	lngs := [2]float64{-180, 180}
@@ -20,17 +20,19 @@ func Encode(lat, lng float64) string {
 	for len(cell) < precision {
 		n := 0
 		// interleave bits
-		n |= constrict(&lats, lat) << 3
-		n |= constrict(&lngs, lng) << 2
-		n |= constrict(&lats, lat) << 1
-		n |= constrict(&lngs, lng)
+		n |= constrict(&lats, latlng.Lat) << 3
+		n |= constrict(&lngs, latlng.Lng) << 2
+		n |= constrict(&lats, latlng.Lat) << 1
+		n |= constrict(&lngs, latlng.Lng)
 		cell += string(base16[n])
 	}
-	return cell
+	return Cell(cell)
 }
 
-func Decode(cell string) ([2]float64, [2]float64) {
+func (cell Cell) Decode() LatLngBox {
+	// South, North
 	lats := [2]float64{-90, 90}
+	// West, East
 	lngs := [2]float64{-180, 180}
 
 	for _, r := range cell {
@@ -40,7 +42,12 @@ func Decode(cell string) ([2]float64, [2]float64) {
 		refine(&lats, (i>>1)&1)
 		refine(&lngs, i&1)
 	}
-	return lats, lngs
+	return LatLngBox{
+		South: lats[0],
+		North: lats[1],
+		West:  lngs[0],
+		East:  lngs[1],
+	}
 }
 
 func constrict(pair *[2]float64, coord float64) int {

@@ -7,33 +7,38 @@ import "testing"
 const (
 	lat  = 37.4
 	lng  = -152.34
-	cell = "8b274e45b9e19"
+	cell = Cell("8b274e45b9e19")
 )
 
+var latlng = LatLng{lat, lng}
+
 func Test_Encode_1(t *testing.T) {
-	result := Encode(lat, lng)
+	result := Encode(latlng)
 	if result != cell {
 		t.Error(result, cell)
 	}
 }
 func Test_Decode_1(t *testing.T) {
-	lats, lngs := Decode(cell)
-	if lat < lats[0] || lat > lats[1] {
-		t.Error("lat out of range", lat, lats)
-	}
-	if lng < lngs[0] || lng > lngs[1] {
-		t.Error("lng out of range", lng, lngs)
+	box := cell.Decode()
+	if !box.Contains(latlng) {
+		t.Error("latlng not in decoded box")
 	}
 }
 
-func Test_Decode_2(t *testing.T) {
+func Test_Decode_Bad_1(t *testing.T) {
 	bad := []byte(cell)
 	bad[3] = 'e'
-	lats, lngs := Decode(string(bad))
-	if lat > lats[0] && lat < lats[1] {
-		t.Error("lat out of range", lat, lats)
+	box := Cell(bad).Decode()
+	if box.Contains(latlng) {
+		t.Error("latlng in decoded box")
 	}
-	if lng > lngs[0] && lng < lngs[1] {
-		t.Error("lng out of range", lng, lngs)
+}
+
+func Test_Decode_Bad_2(t *testing.T) {
+	bad := []byte(cell)
+	bad[5] = 'f'
+	box := Cell(bad).Decode()
+	if box.Contains(latlng) {
+		t.Error("latlng in decoded box")
 	}
 }
