@@ -12,6 +12,13 @@ type LatLngBox struct {
 	South, North, West, East float64
 }
 
+func (b LatLngBox) Center() LatLng {
+	return LatLng{
+		(b.South + b.North) / 2,
+		(b.West + b.East) / 2,
+	}
+}
+
 func (b LatLngBox) NorthWest() LatLng {
 	return LatLng{b.North, b.West}
 }
