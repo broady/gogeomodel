@@ -2,8 +2,6 @@
 // Licensed under Apache 2.
 package geocell
 
-type Cell string
-
 type LatLng struct {
 	Lat, Lng float64
 }

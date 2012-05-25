@@ -12,6 +12,8 @@ const (
 	base16    = "0123456789abcdef"
 )
 
+type Cell string
+
 func Encode(latlng LatLng) Cell {
 	latbits := constrict([2]float64{-90, 90}, latlng.Lat, precision*2)
 	lngbits := constrict([2]float64{-180, 180}, latlng.Lng, precision*2)
@@ -19,10 +21,8 @@ func Encode(latlng LatLng) Cell {
 }
 
 func (cell Cell) Decode() LatLngBox {
-	// South, North
-	lats := [2]float64{-90, 90}
-	// West, East
-	lngs := [2]float64{-180, 180}
+	lats := [2]float64{-90, 90}   // South, North
+	lngs := [2]float64{-180, 180} // West, East
 
 	for _, r := range cell {
 		i := strings.Index(base16, string(r))
@@ -39,20 +39,24 @@ func (cell Cell) Decode() LatLngBox {
 	}
 }
 
+func (cell Cell) Precision() int {
+	return len(cell)
+}
+
 func (cell Cell) East() Cell {
-	return fromBits(cell.latbits(), cell.lngbits()+1, len(cell))
+	return fromBits(cell.latbits(), cell.lngbits()+1, cell.Precision())
 }
 
 func (cell Cell) West() Cell {
-	return fromBits(cell.latbits(), cell.lngbits()-1, len(cell))
+	return fromBits(cell.latbits(), cell.lngbits()-1, cell.Precision())
 }
 
 func (cell Cell) North() Cell {
-	return fromBits(cell.latbits()+1, cell.lngbits(), len(cell))
+	return fromBits(cell.latbits()+1, cell.lngbits(), cell.Precision())
 }
 
 func (cell Cell) South() Cell {
-	return fromBits(cell.latbits()-1, cell.lngbits(), len(cell))
+	return fromBits(cell.latbits()-1, cell.lngbits(), cell.Precision())
 }
 
 func fromBits(lat, lng, precision int) Cell {
