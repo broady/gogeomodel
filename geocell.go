@@ -24,12 +24,14 @@ func (cell Cell) Decode() LatLngBox {
 	lats := [2]float64{-90, 90}   // South, North
 	lngs := [2]float64{-180, 180} // West, East
 
+	// Refine the box based on each character of the cell.
+	// TODO: use deinterleave()
 	for _, r := range cell {
 		i := strings.Index(base16, string(r))
-		refine(&lats, (i>>3)&1)
-		refine(&lngs, (i>>2)&1)
-		refine(&lats, (i>>1)&1)
-		refine(&lngs, i&1)
+		lats[bitat(i, 3)^1] = mid(lats)
+		lngs[bitat(i, 2)^1] = mid(lngs)
+		lats[bitat(i, 1)^1] = mid(lats)
+		lngs[bitat(i, 0)^1] = mid(lngs)
 	}
 	return LatLngBox{
 		South: lats[0],
@@ -52,17 +54,19 @@ func (cell Cell) West() Cell {
 }
 
 func (cell Cell) North() Cell {
+	// TODO: avoid wrapping vertically
 	return fromBits(cell.latbits()+1, cell.lngbits(), cell.Precision())
 }
 
 func (cell Cell) South() Cell {
+	// TODO: avoid wrapping vertically
 	return fromBits(cell.latbits()-1, cell.lngbits(), cell.Precision())
 }
 
 func fromBits(lat, lng, precision int) Cell {
 	cell := ""
-	// interleave
 	for i := 0; i < precision; i++ {
+		// interleave bits
 		n := 0
 		n |= lng & 1
 		n |= lat & 1 << 1
@@ -85,13 +89,14 @@ func (cell Cell) latbits() int {
 }
 
 func (cell Cell) deinterleave(offset uint) int {
+	// may fail if int is 32 bit?
 	bits := 0
 	for _, r := range cell {
 		i := strings.Index(base16, string(r))
 		bits <<= 1
-		bits |= (i >> (2 + offset)) & 1
+		bits |= bitat(i, 2+offset)
 		bits <<= 1
-		bits |= (i >> offset) & 1
+		bits |= bitat(i, offset)
 	}
 	return bits
 }
@@ -111,14 +116,12 @@ func constrict(span [2]float64, coord float64, numbits int) int {
 	return bits
 }
 
-func refine(span *[2]float64, bit int) {
-	if bit&1 != 0 {
-		span[0] = mid(*span)
-	} else {
-		span[1] = mid(*span)
-	}
-}
-
 func mid(pair [2]float64) float64 {
 	return (pair[0] + pair[1]) / 2
 }
+
+// bitat returns 0 or 1 for a given bit position of an int.
+func bitat(b int, pos uint) int {
+	return (b >> pos) & 1
+}
+
