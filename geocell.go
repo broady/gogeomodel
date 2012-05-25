@@ -13,20 +13,9 @@ const (
 )
 
 func Encode(latlng LatLng) Cell {
-	cell := ""
-	lats := [2]float64{-90, 90}
-	lngs := [2]float64{-180, 180}
-
-	for len(cell) < precision {
-		n := 0
-		// interleave bits
-		n |= constrict(&lats, latlng.Lat) << 3
-		n |= constrict(&lngs, latlng.Lng) << 2
-		n |= constrict(&lats, latlng.Lat) << 1
-		n |= constrict(&lngs, latlng.Lng)
-		cell += string(base16[n])
-	}
-	return Cell(cell)
+	latbits := constrict([2]float64{-90, 90}, latlng.Lat, precision*2)
+	lngbits := constrict([2]float64{-180, 180}, latlng.Lng, precision*2)
+	return fromBits(latbits, lngbits, precision)
 }
 
 func (cell Cell) Decode() LatLngBox {
@@ -50,24 +39,82 @@ func (cell Cell) Decode() LatLngBox {
 	}
 }
 
-func constrict(pair *[2]float64, coord float64) int {
-	m := mid(pair)
-	if coord > m {
-		pair[0] = m
-		return 1
-	}
-	pair[1] = m
-	return 0
+func (cell Cell) East() Cell {
+	return fromBits(cell.latbits(), cell.lngbits()+1, len(cell))
 }
 
-func refine(pair *[2]float64, bit int) {
-	if bit != 0 {
-		pair[0] = mid(pair)
+func (cell Cell) West() Cell {
+	return fromBits(cell.latbits(), cell.lngbits()-1, len(cell))
+}
+
+func (cell Cell) North() Cell {
+	return fromBits(cell.latbits()+1, cell.lngbits(), len(cell))
+}
+
+func (cell Cell) South() Cell {
+	return fromBits(cell.latbits()-1, cell.lngbits(), len(cell))
+}
+
+func fromBits(lat, lng, precision int) Cell {
+	cell := ""
+	// interleave
+	for i := 0; i < precision; i++ {
+		n := 0
+		n |= lng & 1
+		n |= lat & 1 << 1
+		n |= lng & 2 << 1
+		n |= lat & 2 << 2
+
+		lat >>= 2
+		lng >>= 2
+		cell = string(base16[n]) + cell
+	}
+	return Cell(cell)
+}
+
+func (cell Cell) lngbits() int {
+	return cell.deinterleave(0)
+}
+
+func (cell Cell) latbits() int {
+	return cell.deinterleave(1)
+}
+
+func (cell Cell) deinterleave(offset uint) int {
+	bits := 0
+	for _, r := range cell {
+		i := strings.Index(base16, string(r))
+		bits <<= 1
+		bits |= (i >> (2 + offset)) & 1
+		bits <<= 1
+		bits |= (i >> offset) & 1
+	}
+	return bits
+}
+
+func constrict(span [2]float64, coord float64, numbits int) int {
+	bits := 0
+	for i := numbits; i > 0; i-- {
+		// subdivide
+		m := mid(span)
+		if coord > m {
+			span[0] = m
+			bits |= 1 << uint(i-1)
+		} else {
+			span[1] = m
+		}
+	}
+	return bits
+}
+
+func refine(span *[2]float64, bit int) {
+	if bit&1 != 0 {
+		span[0] = mid(*span)
 	} else {
-		pair[1] = mid(pair)
+		span[1] = mid(*span)
 	}
 }
 
-func mid(pair *[2]float64) float64 {
+func mid(pair [2]float64) float64 {
 	return (pair[0] + pair[1]) / 2
 }
