@@ -32,9 +32,9 @@ func Decode(cell string) ([2]float64, [2]float64) {
 
 	for _, r := range cell {
 		i := strings.Index(base16, string(r))
-		refine(&lats, (i >> 3)&1)
-		refine(&lngs, (i >> 2)&1)
-		refine(&lats, (i >> 1)&1)
+		refine(&lats, (i>>3)&1)
+		refine(&lngs, (i>>2)&1)
+		refine(&lats, (i>>1)&1)
 		refine(&lngs, i&1)
 	}
 	return lats, lngs
