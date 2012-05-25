@@ -3,8 +3,8 @@
 package geocell
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 const (
@@ -22,10 +22,14 @@ func Test_Encode_1(t *testing.T) {
 		t.Error(result, fmt.Sprintf("%b", result.latbits()), fmt.Sprintf("%b", result.lngbits()))
 	}
 }
+
 func Test_Decode_1(t *testing.T) {
 	box := cell.Decode()
 	if !box.Contains(latlng) {
-		t.Error("latlng not in decoded box")
+		t.Error("latlng not in decoded box", latlng, box)
+	}
+	if !isClose(box.Center(), latlng, .0001) {
+		t.Error("latlng not near middle of decoded box")
 	}
 }
 
@@ -101,4 +105,10 @@ func Test_FromBits_1(t *testing.T) {
 	if fromBits(lats, lngs, len(cell)) != cell {
 		t.Error("fail", lats, lngs, fromBits(lats, lngs, len(cell)))
 	}
+}
+
+func isClose(p1, p2 LatLng, e float64) bool {
+	dlat := p1.Lat - p2.Lat
+	dlng := p1.Lng - p2.Lng
+	return dlat < e && dlat > -e && dlng < e && dlng > -e
 }
