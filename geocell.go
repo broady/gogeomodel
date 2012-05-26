@@ -70,6 +70,7 @@ func (cell Cell) West() Cell {
 func (cell Cell) North() (c Cell, ok bool) {
 	north := cell.latbits() + 1
 	if getbit(north, uint(cell.Precision()*2)) == 1 {
+		// cell is already at top of the world
 		return cell, false
 	}
 	return fromBits(north, cell.lngbits(), cell.Precision()), true
@@ -78,6 +79,7 @@ func (cell Cell) North() (c Cell, ok bool) {
 func (cell Cell) South() (c Cell, ok bool) {
 	latbits := cell.latbits()
 	if latbits == 0 {
+		// cell is already at bottom of the world
 		return cell, false
 	}
 	return fromBits(latbits-1, cell.lngbits(), cell.Precision()), true
