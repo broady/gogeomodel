@@ -13,15 +13,20 @@ const (
 	base16    = "0123456789abcdef"
 )
 
+var (
+	latSpan = [2]float64{-90, 90}
+	lngSpan = [2]float64{-180, 180}
+)
+
 type Cell string
 
 func Encode(latlng LatLng) Cell {
-	latbits := constrict([2]float64{-90, 90}, latlng.Lat, precision*2)
-	lngbits := constrict([2]float64{-180, 180}, latlng.Lng, precision*2)
+	latbits := worldToCoord(latSpan, latlng.Lat, precision*2)
+	lngbits := worldToCoord(lngSpan, latlng.Lng, precision*2)
 	return fromBits(latbits, lngbits, precision)
 }
 
-func constrict(span [2]float64, coord float64, numbits int) int {
+func worldToCoord(span [2]float64, coord float64, numbits int) int {
 	numcells := math.Pow(2, float64(numbits))
 	w := (span[1] - span[0]) / numcells
 	n := (coord - span[0]) / w
@@ -33,8 +38,8 @@ func constrict(span [2]float64, coord float64, numbits int) int {
 }
 
 func (cell Cell) Decode() LatLngBox {
-	s, n := expand([2]float64{-90, 90}, cell.latbits(), cell.Precision()*2)
-	w, e := expand([2]float64{-180, 180}, cell.lngbits(), cell.Precision()*2)
+	s, n := coordToWorld(latSpan, cell.latbits(), cell.Precision()*2)
+	w, e := coordToWorld(lngSpan, cell.lngbits(), cell.Precision()*2)
 	return LatLngBox{
 		South: s,
 		North: n,
@@ -43,7 +48,7 @@ func (cell Cell) Decode() LatLngBox {
 	}
 }
 
-func expand(span [2]float64, coord int, numbits int) (min, max float64) {
+func coordToWorld(span [2]float64, coord int, numbits int) (min, max float64) {
 	numcells := math.Pow(2, float64(numbits))
 	w := (span[1] - span[0]) / numcells
 	n := float64(coord)*w + span[0]
