@@ -23,6 +23,24 @@ func Test_Encode_1(t *testing.T) {
 	}
 }
 
+func Test_Encode_2(t *testing.T) {
+	expected := Cell("0000000000000")
+	result := Encode(LatLng{-90, -180})
+	if result != expected {
+		t.Error(expected, fmt.Sprintf("%b", expected.latbits()), fmt.Sprintf("%b", expected.lngbits()))
+		t.Error(result, fmt.Sprintf("%b", result.latbits()), fmt.Sprintf("%b", result.lngbits()))
+	}
+}
+
+func Test_Encode_3(t *testing.T) {
+	expected := Cell("fffffffffffff")
+	result := Encode(LatLng{90, 180})
+	if result != expected {
+		t.Error(expected, fmt.Sprintf("%b", expected.latbits()), fmt.Sprintf("%b", expected.lngbits()))
+		t.Error(result, fmt.Sprintf("%b", result.latbits()), fmt.Sprintf("%b", result.lngbits()))
+	}
+}
+
 func Test_Decode_1(t *testing.T) {
 	box := cell.Decode()
 	if !box.Contains(latlng) {

@@ -4,6 +4,7 @@
 package geocell
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -15,24 +16,20 @@ const (
 type Cell string
 
 func Encode(latlng LatLng) Cell {
-	latbits := constrict([2]float64{90, -90}, latlng.Lat, precision*2)
-	lngbits := constrict([2]float64{180, -180}, latlng.Lng, precision*2)
+	latbits := constrict([2]float64{-90, 90}, latlng.Lat, precision*2)
+	lngbits := constrict([2]float64{-180, 180}, latlng.Lng, precision*2)
 	return fromBits(latbits, lngbits, precision)
 }
 
 func constrict(span [2]float64, coord float64, numbits int) int {
-	bits := 0
-	for i := uint(numbits); i > 0; i-- {
-		// subdivide
-		m := mid(span)
-		if coord < m {
-			span[0] = m
-		} else {
-			span[1] = m
-			bits |= 1 << (i - 1)
-		}
+	numcells := 1 << uint(numbits)
+	w := float64(span[1]-span[0]) / float64(numcells)
+	n := int((coord - span[0]) / w)
+	if n >= numcells {
+		// out of bounds
+		return numcells - 1
 	}
-	return bits
+	return n
 }
 
 func (cell Cell) Decode() LatLngBox {
