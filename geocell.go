@@ -50,13 +50,6 @@ func expand(span [2]float64, coord int, numbits int) [2]float64 {
 	return [2]float64{n + w, n}
 }
 
-func refine2(span [2]float64, bits int, numbits int) [2]float64 {
-	for i := uint(numbits); i > 0; i-- {
-		span[getbit(bits, i-1)] = mid(span)
-	}
-	return span
-}
-
 func (cell Cell) Precision() int {
 	return len(cell)
 }
