@@ -65,14 +65,20 @@ func (cell Cell) West() Cell {
 	return fromBits(cell.latbits(), cell.lngbits()-1, cell.Precision())
 }
 
-func (cell Cell) North() Cell {
-	// TODO: avoid wrapping vertically
-	return fromBits(cell.latbits()+1, cell.lngbits(), cell.Precision())
+func (cell Cell) North() (c Cell, ok bool) {
+	north := cell.latbits() + 1
+	if getbit(north, uint(cell.Precision()*2)) == 1 {
+		return cell, false
+	}
+	return fromBits(north, cell.lngbits(), cell.Precision()), true
 }
 
-func (cell Cell) South() Cell {
-	// TODO: avoid wrapping vertically
-	return fromBits(cell.latbits()-1, cell.lngbits(), cell.Precision())
+func (cell Cell) South() (c Cell, ok bool) {
+	latbits := cell.latbits()
+	if latbits == 0 {
+		return cell, false
+	}
+	return fromBits(latbits-1, cell.lngbits(), cell.Precision()), true
 }
 
 func fromBits(lat, lng, precision int) Cell {

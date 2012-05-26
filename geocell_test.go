@@ -33,6 +33,15 @@ func Test_Decode_1(t *testing.T) {
 	}
 }
 
+func Test_No_Vertical_Wrap(t *testing.T) {
+	if _, ok := Cell("befab").North(); ok {
+		t.Error("shouldn't be able to go north")
+	}
+	if _, ok := Cell("014510145").South(); ok {
+		t.Error("shouldn't be able to go south")
+	}
+}
+
 func Test_Decode_Bad_1(t *testing.T) {
 	bad := []byte(cell)
 	bad[3] = 'e'
