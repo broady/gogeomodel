@@ -121,10 +121,6 @@ func (cell Cell) deinterleave(offset uint) int {
 	return bits
 }
 
-func mid(pair [2]float64) float64 {
-	return (pair[0] + pair[1]) / 2
-}
-
 // getbit returns 0 or 1 for a given bit position of an int.
 func getbit(b int, pos uint) int {
 	return (b >> pos) & 1
