@@ -33,21 +33,21 @@ func constrict(span [2]float64, coord float64, numbits int) int {
 }
 
 func (cell Cell) Decode() LatLngBox {
-	lats := expand([2]float64{-90, 90}, cell.latbits(), cell.Precision()*2)
-	lngs := expand([2]float64{-180, 180}, cell.lngbits(), cell.Precision()*2)
+	s, n := expand([2]float64{-90, 90}, cell.latbits(), cell.Precision()*2)
+	w, e := expand([2]float64{-180, 180}, cell.lngbits(), cell.Precision()*2)
 	return LatLngBox{
-		South: lats[1],
-		North: lats[0],
-		West:  lngs[1],
-		East:  lngs[0],
+		South: s,
+		North: n,
+		West:  w,
+		East:  e,
 	}
 }
 
-func expand(span [2]float64, coord int, numbits int) [2]float64 {
+func expand(span [2]float64, coord int, numbits int) (min, max float64) {
 	numcells := math.Pow(2, float64(numbits))
 	w := (span[1] - span[0]) / numcells
 	n := float64(coord)*w + span[0]
-	return [2]float64{n + w, n}
+	return n, n + w
 }
 
 func (cell Cell) Precision() int {
