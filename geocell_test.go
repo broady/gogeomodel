@@ -2,10 +2,7 @@
 // Licensed under Apache 2.
 package geocell
 
-import (
-	"fmt"
-	"testing"
-)
+import "testing"
 
 const (
 	lat  = 37.4
@@ -16,33 +13,18 @@ const (
 var latlng = LatLng{lat, lng}
 
 func Test_Encode_1(t *testing.T) {
-	result := Encode(latlng)
-	if result != cell {
-		t.Error(cell, fmt.Sprintf("%b", cell.latbits()), fmt.Sprintf("%b", cell.lngbits()))
-		t.Error(result, fmt.Sprintf("%b", result.latbits()), fmt.Sprintf("%b", result.lngbits()))
-	}
+	encodeDecode(t, cell, latlng)
+	encodeDecode(t, Cell("0000000000000"), LatLng{-90, -180})
+	encodeDecode(t, Cell("fffffffffffff"), LatLng{90, 180})
 }
 
-func Test_Encode_2(t *testing.T) {
-	expected := Cell("0000000000000")
-	result := Encode(LatLng{-90, -180})
-	if result != expected {
-		t.Error(expected, fmt.Sprintf("%b", expected.latbits()), fmt.Sprintf("%b", expected.lngbits()))
-		t.Error(result, fmt.Sprintf("%b", result.latbits()), fmt.Sprintf("%b", result.lngbits()))
+func encodeDecode(t *testing.T, cell Cell, latlng LatLng) {
+	c := Encode(latlng)
+	if c != cell {
+		t.Errorf("%s %b %b", cell, cell.latbits(), cell.lngbits())
+		t.Errorf("%s %b %b", c, c.latbits(), c.lngbits())
 	}
-}
-
-func Test_Encode_3(t *testing.T) {
-	expected := Cell("fffffffffffff")
-	result := Encode(LatLng{90, 180})
-	if result != expected {
-		t.Error(expected, fmt.Sprintf("%b", expected.latbits()), fmt.Sprintf("%b", expected.lngbits()))
-		t.Error(result, fmt.Sprintf("%b", result.latbits()), fmt.Sprintf("%b", result.lngbits()))
-	}
-}
-
-func Test_Decode_1(t *testing.T) {
-	box := cell.Decode()
+	box := c.Decode()
 	if !box.Contains(latlng) {
 		t.Error("latlng not in decoded box", latlng, box)
 	}

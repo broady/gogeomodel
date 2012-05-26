@@ -4,7 +4,7 @@
 package geocell
 
 import (
-	"fmt"
+	"math"
 	"strings"
 )
 
@@ -22,19 +22,19 @@ func Encode(latlng LatLng) Cell {
 }
 
 func constrict(span [2]float64, coord float64, numbits int) int {
-	numcells := 1 << uint(numbits)
-	w := float64(span[1]-span[0]) / float64(numcells)
-	n := int((coord - span[0]) / w)
+	numcells := math.Pow(2, float64(numbits))
+	w := (span[1] - span[0]) / numcells
+	n := (coord - span[0]) / w
 	if n >= numcells {
 		// out of bounds
-		return numcells - 1
+		return int(numcells - 1)
 	}
-	return n
+	return int(n)
 }
 
 func (cell Cell) Decode() LatLngBox {
-	lats := refine([2]float64{90, -90}, cell.latbits(), cell.Precision()*2)
-	lngs := refine([2]float64{180, -180}, cell.lngbits(), cell.Precision()*2)
+	lats := expand([2]float64{-90, 90}, cell.latbits(), cell.Precision()*2)
+	lngs := expand([2]float64{-180, 180}, cell.lngbits(), cell.Precision()*2)
 	return LatLngBox{
 		South: lats[1],
 		North: lats[0],
@@ -43,7 +43,14 @@ func (cell Cell) Decode() LatLngBox {
 	}
 }
 
-func refine(span [2]float64, bits int, numbits int) [2]float64 {
+func expand(span [2]float64, coord int, numbits int) [2]float64 {
+	numcells := math.Pow(2, float64(numbits))
+	w := (span[1] - span[0]) / numcells
+	n := float64(coord)*w + span[0]
+	return [2]float64{n + w, n}
+}
+
+func refine2(span [2]float64, bits int, numbits int) [2]float64 {
 	for i := uint(numbits); i > 0; i-- {
 		span[getbit(bits, i-1)] = mid(span)
 	}
